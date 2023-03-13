@@ -3,7 +3,7 @@ This App is a test App, to see what's possible using open source software to ana
 
 Tech Stack: 
 React Front End
-NodeJS Back End - needs to be version 14.15.5, to support the opencv library.
+NodeJS Back End - needs to be version 14.15.5, to support the opencv modual.
 
 
 "Basic" Features
