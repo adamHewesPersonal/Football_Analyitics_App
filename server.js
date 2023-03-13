@@ -128,10 +128,12 @@ app.delete('/videos/:id', async (req, res) => {
 const userRouter = require('./routes/user');
 const videoRouter = require('./routes/video');
 const playerRouter = require('./routes/player');
+const analysisRouter = require('./routes/analysis');
 const annotationRouter = require('./routes/annotation');
 app.use('/users', userRouter);
 app.use('/videos', videoRouter);
 app.use('/players', playerRouter);
+app.use('/annotations', analysisRouter);
 app.use('/annotations', annotationRouter);
 
 // Start the server
