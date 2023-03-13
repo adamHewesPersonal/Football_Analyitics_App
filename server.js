@@ -1,3 +1,7 @@
+
+
+
+
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -5,13 +9,20 @@ const multer = require('multer');
 const fs = require('fs');
 const { Op } = require('sequelize');
 const cv = require('opencv4nodejs');
-const sequelize = require('./database');
+const mongoose = require('mongoose');
 const Video = require('./models/Video');
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static('uploads'));
+
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+const connection = mongoose.connection;
+connection.once('open', () => {
+  console.log('MongoDB database connection established successfully');
+});
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -113,8 +124,17 @@ app.delete('/videos/:id', async (req, res) => {
   }
 });
 
-sequelize.sync().then(() => {
-  app.listen(5000, () => {
-    console.log('Server started on port 5000');
-  });
+// Routes
+const userRouter = require('./routes/user');
+const videoRouter = require('./routes/video');
+const playerRouter = require('./routes/player');
+const annotationRouter = require('./routes/annotation');
+app.use('/users', userRouter);
+app.use('/videos', videoRouter);
+app.use('/players', playerRouter);
+app.use('/annotations', annotationRouter);
+
+// Start the server
+app.listen(port, () => {
+  console.log(`Server is running on port: ${port}`);
 });
