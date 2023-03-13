@@ -25,7 +25,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 app.get('/', (req, res) => {
-  res.send('Hello, World!');
+  res.send('Football Analytics app is working!');
 });
 
 app.post('/videos', upload.single('video'), async (req, res) => {
