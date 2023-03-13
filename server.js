@@ -133,7 +133,7 @@ const annotationRouter = require('./routes/annotation');
 app.use('/users', userRouter);
 app.use('/videos', videoRouter);
 app.use('/players', playerRouter);
-app.use('/annotations', analysisRouter);
+app.use('/analysis', analysisRouter);
 app.use('/annotations', annotationRouter);
 
 // Start the server
