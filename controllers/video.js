@@ -1,107 +1,66 @@
-const fs = require('fs');
-const path = require('path');
-const { Op } = require('sequelize');
-const Video = require('../models/video');
+const videoService = require('../services/videoService');
 
-exports.createVideo = async (req, res) => {
-  const { title, filename } = req.body;
-
+exports.getVideos = async (req, res, next) => {
   try {
-    const video = await Video.create({ title, filename });
-    res.status(201).json(video);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-};
-
-exports.getVideos = async (req, res) => {
-  try {
-    const videos = await Video.findAll();
+    const videos = await videoService.getVideos();
     res.status(200).json(videos);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+    next(error);
   }
 };
 
-exports.getVideo = async (req, res) => {
-  const id = req.params.id;
-
+exports.getVideoById = async (req, res, next) => {
+  const { id } = req.params;
   try {
-    const video = await Video.findOne({
-      where: { id },
-    });
-
-    if (video) {
-      res.status(200).json(video);
-    } else {
-      res.status(404).json({ message: 'Video not found' });
+    const video = await videoService.getVideoById(id);
+    if (!video) {
+      const error = new Error(`Video with id ${id} not found`);
+      error.statusCode = 404;
+      throw error;
     }
+    res.status(200).json(video);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+    next(error);
   }
 };
 
-exports.deleteVideo = async (req, res) => {
-  const id = req.params.id;
-
+exports.createVideo = async (req, res, next) => {
   try {
-    const video = await Video.findOne({
-      where: { id },
-    });
-
-    if (video) {
-      const filePath = path.join(__dirname, '..', 'uploads', video.filename);
-      fs.unlinkSync(filePath);
-      await video.destroy();
-      res.status(200).json({ message: 'Video deleted successfully' });
-    } else {
-      res.status(404).json({ message: 'Video not found' });
-    }
+    const { name, url, thumbnailUrl } = req.body;
+    const video = await videoService.createVideo({ name, url, thumbnailUrl });
+    res.status(201).json(video);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+    next(error);
   }
 };
 
-exports.getVideoDuration = async (req, res) => {
-  const id = req.params.id;
-
+exports.updateVideo = async (req, res, next) => {
+  const { id } = req.params;
+  const { name, url, thumbnailUrl } = req.body;
   try {
-    const video = await Video.findOne({
-      where: { id },
-    });
-
-    if (video) {
-      const filePath = path.join(__dirname, '..', 'uploads', video.filename);
-      const { duration } = await getVideoInfo(filePath);
-      res.status(200).json({ duration });
-    } else {
-      res.status(404).json({ message: 'Video not found' });
+    const video = await videoService.updateVideo(id, { name, url, thumbnailUrl });
+    if (!video) {
+      const error = new Error(`Video with id ${id} not found`);
+      error.statusCode = 404;
+      throw error;
     }
+    res.status(200).json(video);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+    next(error);
   }
 };
 
-async function getVideoInfo(filePath) {
-  const { promisify } = require('util');
-  const ffmpeg = require('fluent-ffmpeg');
-  const ffprobe = promisify(ffmpeg.ffprobe);
-
-  const { streams: [videoStream] } = await ffprobe(filePath);
-  const { duration } = videoStream;
-
-  return { duration };
-}
-
-module.exports = {
-  createVideo,
-  getVideos,
-  getVideo,
-  deleteVideo,
-  getVideoDuration,
+exports.deleteVideo = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const video = await videoService.deleteVideo(id);
+    if (!video) {
+      const error = new Error(`Video with id ${id} not found`);
+      error.statusCode = 404;
+      throw error;
+    }
+    res.status(200).json({ message: 'Video deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
 };

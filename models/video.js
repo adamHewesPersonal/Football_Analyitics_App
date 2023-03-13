@@ -1,16 +1,37 @@
-const Sequelize = require('sequelize');
-const sequelize = require('../database');
+const mongoose = require('mongoose');
 
-const Video = sequelize.define('video', {
+const videoSchema = new mongoose.Schema({
   title: {
-    type: Sequelize.STRING,
-    allowNull: false,
+    type: String,
+    required: true
   },
-  filename: {
-    type: Sequelize.STRING,
-    allowNull: false,
-    unique: true,
+  description: {
+    type: String,
+    required: true
   },
+  url: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  duration: {
+    type: Number,
+    required: true
+  },
+  thumbnailUrl: {
+    type: String,
+    required: true
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
 });
+
+const Video = mongoose.model('Video', videoSchema);
 
 module.exports = Video;
