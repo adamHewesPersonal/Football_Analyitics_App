@@ -1,107 +1,76 @@
-const fs = require('fs');
-const path = require('path');
-const { Op } = require('sequelize');
 const Video = require('../models/video');
 
-exports.createVideo = async (req, res) => {
-  const { title, filename } = req.body;
-
+// GET all videos
+const getVideos = async (req, res) => {
   try {
-    const video = await Video.create({ title, filename });
-    res.status(201).json(video);
+    const videos = await Video.find();
+    res.json(videos);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Server Error' });
   }
 };
 
-exports.getVideos = async (req, res) => {
+// GET video by ID
+const getVideoById = async (req, res) => {
   try {
-    const videos = await Video.findAll();
-    res.status(200).json(videos);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-};
-
-exports.getVideo = async (req, res) => {
-  const id = req.params.id;
-
-  try {
-    const video = await Video.findOne({
-      where: { id },
-    });
-
-    if (video) {
-      res.status(200).json(video);
-    } else {
-      res.status(404).json({ message: 'Video not found' });
+    const video = await Video.findById(req.params.id);
+    if (!video) {
+      return res.status(404).json({ message: 'Video not found' });
     }
+    res.json(video);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Server Error' });
   }
 };
 
-exports.deleteVideo = async (req, res) => {
-  const id = req.params.id;
-
+// POST a new video
+const createVideo = async (req, res) => {
   try {
-    const video = await Video.findOne({
-      where: { id },
-    });
-
-    if (video) {
-      const filePath = path.join(__dirname, '..', 'uploads', video.filename);
-      fs.unlinkSync(filePath);
-      await video.destroy();
-      res.status(200).json({ message: 'Video deleted successfully' });
-    } else {
-      res.status(404).json({ message: 'Video not found' });
-    }
+    const video = new Video(req.body);
+    await video.save();
+    res.json(video);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Server Error' });
   }
 };
 
-exports.getVideoDuration = async (req, res) => {
-  const id = req.params.id;
-
+// PUT update a video
+const updateVideo = async (req, res) => {
   try {
-    const video = await Video.findOne({
-      where: { id },
+    const video = await Video.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
     });
-
-    if (video) {
-      const filePath = path.join(__dirname, '..', 'uploads', video.filename);
-      const { duration } = await getVideoInfo(filePath);
-      res.status(200).json({ duration });
-    } else {
-      res.status(404).json({ message: 'Video not found' });
+    if (!video) {
+      return res.status(404).json({ message: 'Video not found' });
     }
+    res.json(video);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Server Error' });
   }
 };
 
-async function getVideoInfo(filePath) {
-  const { promisify } = require('util');
-  const ffmpeg = require('fluent-ffmpeg');
-  const ffprobe = promisify(ffmpeg.ffprobe);
-
-  const { streams: [videoStream] } = await ffprobe(filePath);
-  const { duration } = videoStream;
-
-  return { duration };
-}
+// DELETE a video
+const deleteVideo = async (req, res) => {
+  try {
+    const video = await Video.findByIdAndDelete(req.params.id);
+    if (!video) {
+      return res.status(404).json({ message: 'Video not found' });
+    }
+    res.json({ message: 'Video deleted' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
 
 module.exports = {
-  createVideo,
   getVideos,
-  getVideo,
+  getVideoById,
+  createVideo,
+  updateVideo,
   deleteVideo,
-  getVideoDuration,
 };
