@@ -1,76 +1,66 @@
-const Video = require('../models/video');
+const videoService = require('../services/videoService');
 
-// GET all videos
-const getVideos = async (req, res) => {
+exports.getVideos = async (req, res, next) => {
   try {
-    const videos = await Video.find();
-    res.json(videos);
+    const videos = await videoService.getVideos();
+    res.status(200).json(videos);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server Error' });
+    next(error);
   }
 };
 
-// GET video by ID
-const getVideoById = async (req, res) => {
+exports.getVideoById = async (req, res, next) => {
+  const { id } = req.params;
   try {
-    const video = await Video.findById(req.params.id);
+    const video = await videoService.getVideoById(id);
     if (!video) {
-      return res.status(404).json({ message: 'Video not found' });
+      const error = new Error(`Video with id ${id} not found`);
+      error.statusCode = 404;
+      throw error;
     }
-    res.json(video);
+    res.status(200).json(video);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server Error' });
+    next(error);
   }
 };
 
-// POST a new video
-const createVideo = async (req, res) => {
+exports.createVideo = async (req, res, next) => {
   try {
-    const video = new Video(req.body);
-    await video.save();
-    res.json(video);
+    const { name, url, thumbnailUrl } = req.body;
+    const video = await videoService.createVideo({ name, url, thumbnailUrl });
+    res.status(201).json(video);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server Error' });
+    next(error);
   }
 };
 
-// PUT update a video
-const updateVideo = async (req, res) => {
+exports.updateVideo = async (req, res, next) => {
+  const { id } = req.params;
+  const { name, url, thumbnailUrl } = req.body;
   try {
-    const video = await Video.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
+    const video = await videoService.updateVideo(id, { name, url, thumbnailUrl });
     if (!video) {
-      return res.status(404).json({ message: 'Video not found' });
+      const error = new Error(`Video with id ${id} not found`);
+      error.statusCode = 404;
+      throw error;
     }
-    res.json(video);
+    res.status(200).json(video);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server Error' });
+    next(error);
   }
 };
 
-// DELETE a video
-const deleteVideo = async (req, res) => {
+exports.deleteVideo = async (req, res, next) => {
+  const { id } = req.params;
   try {
-    const video = await Video.findByIdAndDelete(req.params.id);
+    const video = await videoService.deleteVideo(id);
     if (!video) {
-      return res.status(404).json({ message: 'Video not found' });
+      const error = new Error(`Video with id ${id} not found`);
+      error.statusCode = 404;
+      throw error;
     }
-    res.json({ message: 'Video deleted' });
+    res.status(200).json({ message: 'Video deleted successfully' });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server Error' });
+    next(error);
   }
-};
-
-module.exports = {
-  getVideos,
-  getVideoById,
-  createVideo,
-  updateVideo,
-  deleteVideo,
 };
